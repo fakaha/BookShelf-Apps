@@ -9,14 +9,6 @@
 const books = [];
 const NGERENDER_EVENT = "render-book";
 
-function isStorageExist(){
-  if(typeof(Storage) == null){
-    alert('Browser tidak support untuk menggunakan local storage');
-    return false;
-  }
-  return true;
-}
-
 document.addEventListener("DOMContentLoaded", function () {
     const submitForm = document.getElementById("inputBook");
     submitForm.addEventListener("submit", function (event) {
@@ -24,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
       addBook();
     });
     if (isStorageExist()) {
-      // loadDataFromStorage();
+      loadDataFromStorage();
     }
 });
 
@@ -32,6 +24,7 @@ function addBook(){
     const bookTitle = document.getElementById("inputBookTitle").value;
     const writer = document.getElementById("inputBookAuthor").value;
     const bookYear = document.getElementById("inputBookYear").value;
+    const isCompleteBox = document.getElementById("inputBookIsComplete").checked;
 
     const generatedID = generateId();
     const bookObject = generateBookObject(
@@ -39,11 +32,12 @@ function addBook(){
         bookTitle,
         writer,
         bookYear,
-        false
+        isCompleteBox
     );
     books.push(bookObject);
 
     document.dispatchEvent(new Event(NGERENDER_EVENT));
+    SaveData();
     alert(`Data buku berhasil ditambahkan!`)
 }
 
@@ -158,7 +152,7 @@ function findBook(bookID){
 
 function findBookIndex(bookID){
   for(const index in books){
-    if(books.id === bookID){
+    if(books[index].id === bookID){
       return index;
     }
   }
@@ -172,15 +166,17 @@ function addBookToCompleted(bookID){
 
   bookTarget.isComplete = true;
   document.dispatchEvent(new Event(NGERENDER_EVENT));
+  SaveData();
   alert('Buku ditandai menjadi selesai');
 }
 
 function removeBook(bookID){
   const bookTarget = findBookIndex(bookID);
 
-  if(bookTarget == -1) return;
+  if(bookTarget === -1) return;
   alert('Buku berhasil dihapus');
   books.splice(bookTarget, 1);
+  SaveData();
   document.dispatchEvent(new Event(NGERENDER_EVENT));
 }
 
@@ -191,6 +187,43 @@ function undoBookFromCompleted(bookID){
 
   bookTarget.isComplete = false;
   document.dispatchEvent(new Event(NGERENDER_EVENT));
+  saveData()
   alert('Buku ditandai menjadi belum selesai');
 }
 
+
+// KODE UNTUK STORAGE
+const SAVED_EVENT = 'saved-book';
+const STORAGE_KEY = 'BOOKS_APPS';
+
+function SaveData(){
+  if(isStorageExist()){
+    const parsed = JSON.stringify(books);
+    localStorage.setItem(STORAGE_KEY, parsed);
+    document.dispatchEvent(new Event(SAVED_EVENT));
+  }
+}
+
+function isStorageExist(){
+  if(typeof(Storage) === undefined){
+    alert('Browser anda tidak support local storage');
+    return false;
+  }
+  return true;
+}
+
+document.addEventListener(SAVED_EVENT, function(){
+  console.log(localStorage.getItem(STORAGE_KEY));
+})
+
+function loadDataFromStorage(){
+  const localData = localStorage.getItem(STORAGE_KEY);
+  let data = JSON.parse(localData);
+
+  if(data !== null){
+    for(const book of data){
+      books.push(book);
+    }
+  }
+  document.dispatchEvent(new Event(NGERENDER_EVENT));
+}
