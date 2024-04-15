@@ -37,7 +37,7 @@ function addBook(){
     books.push(bookObject);
 
     document.dispatchEvent(new Event(NGERENDER_EVENT));
-    SaveData();
+    saveData();
     alert(`Data buku berhasil ditambahkan!`)
 }
 
@@ -80,6 +80,7 @@ function makeBookShelf(bookObject){
   // <article class="book_item">
   const container = document.createElement('article');
   container.classList.add('book_item');
+  container.setAttribute('id', `book-${bookObject.id}`)
 
   //  <h3>Book Title</h3>
   const textTitle = document.createElement('h3');
@@ -118,7 +119,15 @@ function makeBookShelf(bookObject){
       removeBook(bookObject.id);
     })
 
-    containerAction.append(incompleteButton, deleteButton);
+    const editButton = document.createElement('button');
+    editButton.classList.add('blue');
+    editButton.innerText = 'Edit Buku';
+    editButton.addEventListener('click', function(){
+      editBook(bookObject.id);
+      console.log('edit button clicked');
+    })
+
+    containerAction.append(incompleteButton, deleteButton, editButton);
   }else{
     const doneButton = document.createElement('button');
     doneButton.classList.add('green');
@@ -135,7 +144,15 @@ function makeBookShelf(bookObject){
       removeBook(bookObject.id);
     })
 
-    containerAction.append(doneButton, deleteButton);
+    const editButton = document.createElement('button');
+    editButton.classList.add('blue');
+    editButton.innerText = 'Edit Buku';
+    editButton.addEventListener('click', function(){
+      editBook(bookObject.id);
+      console.log('edit button clicked');
+    })
+
+    containerAction.append(doneButton, deleteButton, editButton);
   }
   return container;
 // </article>
@@ -166,17 +183,17 @@ function addBookToCompleted(bookID){
 
   bookTarget.isComplete = true;
   document.dispatchEvent(new Event(NGERENDER_EVENT));
-  SaveData();
+  saveData();
   alert('Buku ditandai menjadi selesai');
 }
 
 function removeBook(bookID){
   const bookTarget = findBookIndex(bookID);
-
+  
   if(bookTarget === -1) return;
   alert('Buku berhasil dihapus');
   books.splice(bookTarget, 1);
-  SaveData();
+  saveData();
   document.dispatchEvent(new Event(NGERENDER_EVENT));
 }
 
@@ -191,12 +208,70 @@ function undoBookFromCompleted(bookID){
   alert('Buku ditandai menjadi belum selesai');
 }
 
+function editBook(bookID){
+  const bookTarget = findBookIndex(bookID);
+  
+  if(bookTarget == null) return;
+  
+  const currentBook = books[bookTarget];
+  const inputJudul = document.createElement('input');
+  inputJudul.value = currentBook.title;
+  const inputPenulis = document.createElement('input');
+  inputPenulis.value = currentBook.author;
+  const inputTahun = document.createElement('input');
+  inputTahun.value = currentBook.year;
+  const inputIsComplete = document.createElement('input');
+  inputIsComplete.type = 'hidden';
+  inputIsComplete.value = currentBook.isComplete;
+
+  // Menghilangkan editButton dengan mengubah display menjadi none
+  event.target.style.display = 'none';
+
+  
+  
+  const saveButton = document.createElement('button');
+  saveButton.innerText = 'Simpan';
+  saveButton.classList.add('green');
+  saveButton.addEventListener('click', function(){
+    console.log('savebutton click');
+    saveButtonEdit(bookID, inputJudul.value, inputPenulis.value, inputTahun.value);
+  })
+
+  const cancelButton = document.createElement('button');
+  cancelButton.innerText = 'Batal';
+  cancelButton.classList.add('red');
+  cancelButton.addEventListener('click', function(){
+    console.log('batal edit click');
+    document.dispatchEvent(new Event(NGERENDER_EVENT))
+  })
+  
+  const containerAction = document.getElementById(`book-${bookID}`);
+  console.log(containerAction);
+  containerAction.append(inputJudul, inputPenulis, inputTahun, inputIsComplete, saveButton, cancelButton)
+  
+}
+
+function saveButtonEdit(bookID, newTitle, newAuthor, newYear){
+  const bookTargetIndex = findBookIndex(bookID);
+  if(bookTargetIndex === null) return;
+
+  // Perbarui data buku yang sesuai dengan nilai baru
+  books[bookTargetIndex].title = newTitle;
+  books[bookTargetIndex].author = newAuthor;
+  books[bookTargetIndex].year = newYear;
+
+  // Re-render bookshelf
+  document.dispatchEvent(new Event(NGERENDER_EVENT));
+
+  saveData();
+}
+
 
 // KODE UNTUK STORAGE
 const SAVED_EVENT = 'saved-book';
 const STORAGE_KEY = 'BOOKS_APPS';
 
-function SaveData(){
+function saveData(){
   if(isStorageExist()){
     const parsed = JSON.stringify(books);
     localStorage.setItem(STORAGE_KEY, parsed);
