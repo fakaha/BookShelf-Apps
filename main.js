@@ -55,8 +55,16 @@ function generateBookObject(id, title, author, year, isComplete){
   };
 }
 
+const searchSubmit = document.getElementById("searchSubmit");
+searchSubmit.addEventListener('click', function(){
+  event.preventDefault(); // Hindari pengiriman formulir
+  document.dispatchEvent(new Event(NGERENDER_EVENT));
+});
+
+
 document.addEventListener(NGERENDER_EVENT, function(){
   console.log(books);
+  const filterInput = document.getElementById("searchBookTitle").value.toLowerCase();
 
   const incompletedBooksList = document.getElementById('incompleteBookshelfList');
   incompletedBooksList.innerText = '';
@@ -65,13 +73,17 @@ document.addEventListener(NGERENDER_EVENT, function(){
   completedBooksList.innerText = '';
 
   for(const book of books){
+    if(book.title.toLowerCase().includes(filterInput)){
     const makeBook = makeBookShelf(book);
+
+
 
     if(!book.isComplete){
       incompletedBooksList.append(makeBook);
     }else{      
       completedBooksList.append(makeBook);
     }
+  }
   }
 
 })
@@ -231,7 +243,7 @@ function editBook(bookID){
   
   const saveButton = document.createElement('button');
   saveButton.innerText = 'Simpan';
-  saveButton.classList.add('green');
+  saveButton.classList.add('green', 'edit-action-button');
   saveButton.addEventListener('click', function(){
     console.log('savebutton click');
     saveButtonEdit(bookID, inputJudul.value, inputPenulis.value, inputTahun.value);
@@ -239,7 +251,7 @@ function editBook(bookID){
 
   const cancelButton = document.createElement('button');
   cancelButton.innerText = 'Batal';
-  cancelButton.classList.add('red');
+  cancelButton.classList.add('red', 'edit-action-button');
   cancelButton.addEventListener('click', function(){
     console.log('batal edit click');
     document.dispatchEvent(new Event(NGERENDER_EVENT))
