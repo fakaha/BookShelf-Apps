@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function addBook(){
     const bookTitle = document.getElementById("inputBookTitle").value;
     const writer = document.getElementById("inputBookAuthor").value;
-    const bookYear = document.getElementById("inputBookYear").value;
+    const bookYear = parseInt(document.getElementById("inputBookYear").value);
     const isCompleteBox = document.getElementById("inputBookIsComplete").checked;
 
     const generatedID = generateId();
